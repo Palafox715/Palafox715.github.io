@@ -1,0 +1,77 @@
+{% for ticket in tickets %}
+  <tr class="border-t odd:bg-white even:bg-gray-50">
+    <td class="px-3 py-2 align-middle text-center">
+      <input type="checkbox" class="row-check h-4 w-4" data-id="{{ ticket.id }}">
+    </td>
+    <td class="px-3 py-2 align-middle">{{ ticket.id }}</td>
+    <td class="px-3 py-2 align-middle">{{ ticket.cubiculo }}</td>
+    <td class="px-3 py-2 align-middle">
+      <div class="max-w-[24rem] truncate" title="{{ ticket.problema }}">{{ ticket.problema }}</div>
+    </td>
+    <td class="px-3 py-2 align-middle">{{ ticket.status }}</td>
+    <td class="px-3 py-2 align-middle whitespace-nowrap">{{ ticket.hora }}</td>
+    <td class="px-3 py-2 align-middle text-center whitespace-nowrap">
+      {% if ticket.status == 'resuelto' %}
+        {{ ticket.atendido_por }}
+      {% else %}
+        —
+      {% endif %}
+    </td>
+
+    <!-- Acciones -->
+    <td class="px-3 py-2 align-middle">
+      {% if ticket.status == 'pendiente' %}
+        <a href="{{ url_for('process_ticket', ticket_id=ticket.id) }}"
+           class="inline-flex items-center bg-blue-600 text-white px-3 h-9 rounded-md hover:bg-blue-700"
+           data-action="attend"
+           data-ticket-id="{{ ticket.id }}">Atendiendo</a>
+
+      {% elif ticket.status == 'en progreso' %}
+        <form action="{{ url_for('resolve_ticket', ticket_id=ticket.id) }}"
+              method="post" class="flex flex-wrap items-center gap-2"
+              data-ticket-id="{{ ticket.id }}">
+          <select name="atendido_por" required class="border rounded-md h-9 px-2">
+            <option value="" disabled selected>Elige técnico</option>
+            {% for tech in tecnicos %}
+              <option value="{{ tech }}">{{ tech }}</option>
+            {% endfor %}
+          </select>
+          <input class="border rounded-md h-9 px-2 w-40"
+                 type="text" name="solucion" placeholder="Solución" required>
+          <button class="bg-green-600 text-white px-3 h-9 rounded-md hover:bg-green-700"
+                  type="submit">Resolver</button>
+        </form>
+
+      {% else %}
+        <div class="max-w-[18rem] truncate" title="{{ ticket.solucion }}">{{ ticket.solucion }}</div>
+      {% endif %}
+    </td>
+
+    <!-- ► Nueva columna: Observaciones (antes de Editar) -->
+    <td class="px-3 py-2 align-middle">
+      <div class="max-w-[18rem] truncate" title="{{ ticket.observaciones }}">{{ ticket.observaciones or '—' }}</div>
+    </td>
+
+    <!-- Editar -->
+    <td class="px-3 py-2 align-middle text-center">
+      <button type="button"
+              class="inline-flex items-center justify-center w-8 h-8 rounded-md border border-gray-300 text-indigo-600 hover:bg-indigo-50"
+              title="Editar ticket"
+              data-action="edit"
+              data-id="{{ ticket.id }}"
+              data-cubiculo="{{ ticket.cubiculo }}"
+              data-problema="{{ ticket.problema }}"
+              data-status="{{ ticket.status }}"
+              data-atendido="{{ ticket.atendido_por or '' }}"
+              data-solucion="{{ ticket.solucion or '' }}"
+              data-hora="{{ ticket.hora or '' }}"
+              data-observaciones="{{ ticket.observaciones or '' }}">
+        <!-- ícono lápiz -->
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M12 20h9" stroke-width="2" stroke-linecap="round"/>
+          <path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4L16.5 3.5z" stroke-width="2" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </td>
+  </tr>
+{% endfor %}
