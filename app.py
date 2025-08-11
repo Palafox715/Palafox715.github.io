@@ -140,7 +140,7 @@ def query_tickets(status: str, tech: str):
 # admin_settings, export_tickets] ...
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Entrada principal adaptada a Railway
+# Entrada principal adaptada a Railway aqui tengo el problema
 # ──────────────────────────────────────────────────────────────────────────────
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
