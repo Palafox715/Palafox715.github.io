@@ -5,6 +5,13 @@ from datetime import datetime
 import csv
 from werkzeug.security import generate_password_hash, check_password_hash
 
+# --- Persistencia amigable con Railway ---
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.getenv("DATA_DIR", os.path.join(BASE_DIR, "data"))  # ./data por defecto
+os.makedirs(DATA_DIR, exist_ok=True)  # << crea la carpeta si no existe
+DATABASE = os.path.join(DATA_DIR, "tickets.db")
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 # Configuración de rutas y base de datos
 # ──────────────────────────────────────────────────────────────────────────────
