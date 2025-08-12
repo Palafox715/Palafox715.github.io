@@ -1,2 +1,1 @@
-web: gunicorn tickets_app:app --workers 1 --threads 4 --timeout 60
-
+web: gunicorn wsgi:app --workers 1 --threads 4 --timeout 60
