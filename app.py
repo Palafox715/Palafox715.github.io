@@ -31,6 +31,14 @@ if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
 
 
+
+from flask import render_template
+
+@app.route("/", methods=["GET"])
+def index():
+    return render_template("form.html")
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 # Configuración de rutas y base de datos
 # ──────────────────────────────────────────────────────────────────────────────
@@ -171,5 +179,6 @@ def query_tickets(status: str, tech: str):
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
+
 
 
