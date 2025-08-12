@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Ajustes de seguridad</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 p-6">
@@ -17,11 +18,18 @@
       </div>
     {% endif %}
 
-    <form action="{{ url_for('admin_settings') }}" method="post" class="space-y-4">
+    <form action="{{ url_for('admin_settings') }}" method="post" class="space-y-4" novalidate>
       {% if has_hash %}
         <div>
-          <label class="block text-gray-700">Clave actual</label>
-          <input type="password" name="current" class="w-full border rounded p-2" required>
+          <label class="block text-gray-700 mb-1" for="current">Clave actual</label>
+          <div class="relative">
+            <input id="current" name="current" type="password"
+                   class="w-full border rounded p-2 pr-10"
+                   required minlength="4" maxlength="128"
+                   spellcheck="false" inputmode="text"
+                   autocomplete="current-password" />
+            <button type="button" class="abs-toggle absolute right-2 top-1/2 -translate-y-1/2 text-sm text-gray-500">Mostrar</button>
+          </div>
           <p class="text-xs text-gray-500 mt-1">Requerida para cambiar la clave.</p>
         </div>
       {% else %}
@@ -31,24 +39,97 @@
       {% endif %}
 
       <div>
-        <label class="block text-gray-700">Nueva clave</label>
-        <input type="password" name="new" class="w-full border rounded p-2" required minlength="4">
+        <label class="block text-gray-700 mb-1" for="new">Nueva clave</label>
+        <div class="relative">
+          <input id="new" name="new" type="password"
+                 class="w-full border rounded p-2 pr-10"
+                 required minlength="4" maxlength="128"
+                 spellcheck="false" inputmode="text"
+                 autocomplete="new-password" />
+          <button type="button" class="abs-toggle absolute right-2 top-1/2 -translate-y-1/2 text-sm text-gray-500">Mostrar</button>
+        </div>
+        <div class="mt-2 h-1 bg-gray-200 rounded">
+          <div id="strength" class="h-1 w-0 bg-red-500 rounded transition-all"></div>
+        </div>
+        <p id="strength-label" class="text-xs text-gray-500 mt-1">Fuerza: —</p>
       </div>
 
       <div>
-        <label class="block text-gray-700">Confirmar nueva clave</label>
-        <input type="password" name="confirm" class="w-full border rounded p-2" required minlength="4">
+        <label class="block text-gray-700 mb-1" for="confirm">Confirmar nueva clave</label>
+        <div class="relative">
+          <input id="confirm" name="confirm" type="password"
+                 class="w-full border rounded p-2 pr-10"
+                 required minlength="4" maxlength="128"
+                 spellcheck="false" inputmode="text"
+                 autocomplete="new-password" />
+          <button type="button" class="abs-toggle absolute right-2 top-1/2 -translate-y-1/2 text-sm text-gray-500">Mostrar</button>
+        </div>
+        <p id="match-hint" class="text-xs mt-1 text-gray-500">Escribe la misma clave.</p>
       </div>
 
       <div class="flex gap-2">
-        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+        <button id="submitBtn" type="submit"
+                class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-60">
           Guardar
         </button>
-        <a href="{{ url_for('dashboard') }}" class="bg-gray-300 text-gray-900 px-4 py-2 rounded hover:bg-gray-400">
+        <a href="{{ url_for('dashboard') }}"
+           class="bg-gray-300 text-gray-900 px-4 py-2 rounded hover:bg-gray-400">
           Volver al dashboard
         </a>
       </div>
     </form>
   </div>
+
+  <script>
+    // Mostrar/ocultar contraseñas
+    document.querySelectorAll('.abs-toggle').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const input = btn.previousElementSibling;
+        const isPwd = input.type === 'password';
+        input.type = isPwd ? 'text' : 'password';
+        btn.textContent = isPwd ? 'Ocultar' : 'Mostrar';
+      });
+    });
+
+    // Indicador simple de fuerza
+    const newInput = document.getElementById('new');
+    const bar = document.getElementById('strength');
+    const label = document.getElementById('strength-label');
+    const confirmInput = document.getElementById('confirm');
+    const matchHint = document.getElementById('match-hint');
+    const submitBtn = document.getElementById('submitBtn');
+
+    function score(pwd) {
+      let s = 0;
+      if (!pwd) return 0;
+      if (pwd.length >= 8) s++;
+      if (/[A-Z]/.test(pwd)) s++;
+      if (/[a-z]/.test(pwd)) s++;
+      if (/\d/.test(pwd)) s++;
+      if (/[^A-Za-z0-9]/.test(pwd)) s++;
+      return Math.min(s, 5);
+    }
+
+    function renderStrength() {
+      const s = score(newInput.value);
+      const pct = (s/5)*100;
+      bar.style.width = pct + '%';
+      bar.className = 'h-1 rounded transition-all ' + (s<=2 ? 'bg-red-500' : s<=3 ? 'bg-yellow-500' : 'bg-green-500');
+      label.textContent = 'Fuerza: ' + (s<=2 ? 'baja' : s<=3 ? 'media' : 'alta');
+    }
+
+    function checkMatch() {
+      const ok = newInput.value && newInput.value === confirmInput.value;
+      matchHint.textContent = ok ? 'Coinciden.' : 'Las claves no coinciden.';
+      matchHint.className = 'text-xs mt-1 ' + (ok ? 'text-green-600' : 'text-red-600');
+      submitBtn.disabled = !ok;
+    }
+
+    newInput.addEventListener('input', () => { renderStrength(); checkMatch(); });
+    confirmInput.addEventListener('input', checkMatch);
+
+    // Inicial
+    renderStrength(); checkMatch();
+  </script>
 </body>
 </html>
