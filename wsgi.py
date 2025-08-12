@@ -1,4 +1,2 @@
-from tickets_app import app
-
-if __name__ == "__main__":
-    app.run()
+from tickets_app import app as application
+app = application
