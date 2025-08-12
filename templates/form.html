@@ -1,34 +1,61 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Reportar ticket</title>
+  <meta charset="UTF-8" />
+  <title>Registro de Tickets</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Tailwind CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 p-6">
-  <div class="max-w-md mx-auto bg-white shadow-lg rounded-lg p-6">
-    <h1 class="text-2xl mb-4">Reportar problema</h1>
+<body class="bg-gray-100">
 
-    {% if message %}
-      <div
-        class="mb-4 p-4 rounded
-               {{ 'bg-green-100 border border-green-400 text-green-700' if category=='success'
-                  else 'bg-red-100 border border-red-400 text-red-700' }}">
-        {{ message }}
+  <!-- Barra superior -->
+  <header class="fixed top-0 left-0 right-0 z-50 bg-gray-800 shadow">
+    <div class="max-w-6xl mx-auto px-4">
+      <div class="h-14 flex items-center gap-3">
+        <img src="{{ url_for('static', filename='Logo.png') }}" alt="Logotipo" class="h-10 w-auto" />
+        <h1 class="text-white text-lg font-semibold tracking-wide">Sistema de Tickets</h1>
+
+        <!-- Acciones rápidas -->
+        <nav class="ml-auto flex items-center gap-2">
+          <a href="{{ url_for('dashboard') }}"
+             class="text-gray-100/90 hover:text-white text-sm px-3 py-1.5 rounded hover:bg-gray-700">Dashboard</a>
+          <a href="{{ url_for('export_tickets') }}"
+             class="text-gray-100/90 hover:text-white text-sm px-3 py-1.5 rounded hover:bg-gray-700">Exportar CSV</a>
+          <a href="{{ url_for('admin_settings') }}"
+             class="text-gray-100/90 hover:text-white text-sm px-3 py-1.5 rounded hover:bg-gray-700">Ajustes</a>
+        </nav>
       </div>
-      <div class="text-center">
-        <button
-          onclick="window.location.href='/'"
-          class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-        >
-          Generar nuevo ticket
-        </button>
+    </div>
+  </header>
+
+  <!-- Contenido -->
+  <main class="pt-20 pb-10">
+    <div class="max-w-xl mx-auto bg-white shadow-lg rounded-lg p-6 space-y-6">
+
+      <!-- Mensajes -->
+      {% if message %}
+      <div class="p-3 rounded flex items-center gap-2
+        {{ 'bg-green-100 border border-green-400 text-green-700' if category=='success'
+           else 'bg-red-100 border border-red-400 text-red-700' }}"
+           id="flash-msg">
+        <span class="text-sm">{{ message }}</span>
+        <button class="ml-auto text-xs underline hover:no-underline" onclick="document.getElementById('flash-msg')?.remove()">Cerrar</button>
       </div>
-    {% else %}
-      <form action="/" method="post" class="space-y-4">
+      {% endif %}
+
+      <div class="space-y-1">
+        <h2 class="text-xl font-semibold text-gray-800">Generar ticket</h2>
+        <p class="text-sm text-gray-600">Solo puedes tener <strong>un ticket activo</strong> por cubículo.</p>
+      </div>
+
+      <!-- Formulario -->
+      <form action="{{ url_for('submit_ticket') }}" method="post" class="space-y-4" id="ticket-form">
         <div>
-          <label for="cubiculo" class="block text-gray-700">Cubículo:</label>
-          <select id="cubiculo" name="cubiculo" class="w-full border rounded p-2" required>
+          <label for="cubiculo" class="block text-sm text-gray-700 mb-1">Cubículo</label>
+          <select id="cubiculo" name="cubiculo" required
+                  class="w-full border rounded-md h-11 px-3 bg-white">
+            <option value="" disabled selected>Elige tu cubículo</option>
             {% for c in cubiculos %}
               <option value="{{ c }}">{{ c }}</option>
             {% endfor %}
@@ -36,25 +63,50 @@
         </div>
 
         <div>
-          <label for="problema" class="block text-gray-700">Problema:</label>
-          <select id="problema" name="problema" class="w-full border rounded p-2" required>
+          <label for="problema" class="block text-sm text-gray-700 mb-1">Problema</label>
+          <select id="problema" name="problema" required
+                  class="w-full border rounded-md h-11 px-3 bg-white">
+            <option value="" disabled selected>Selecciona el problema</option>
             {% for p in problemas %}
               <option value="{{ p }}">{{ p }}</option>
             {% endfor %}
           </select>
         </div>
 
-        <button class="bg-blue-500 text-white px-4 py-2 rounded" type="submit">
-          Enviar ticket
-        </button>
-      </form>
-    {% endif %}
-  </div>
+        <div class="pt-2 flex items-center justify-between">
+          <button type="submit"
+                  class="bg-blue-600 text-white px-5 h-11 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            Enviar ticket
+          </button>
 
+          <!-- Atajos útiles -->
+          <div class="text-xs text-gray-500">
+            <span class="hidden sm:inline">Atajos:</span>
+            <a href="{{ url_for('dashboard') }}" class="underline hover:no-underline">ver dashboard</a>
+          </div>
+        </div>
+      </form>
+
+      <!-- Info -->
+      <div class="text-xs text-gray-500">
+        ⚙️ Si tu cubículo cambia o el problema no aparece en la lista, avisa a Soporte para actualizar el catálogo.
+      </div>
+    </div>
+  </main>
+
+  <!-- Pequeños toques de UX -->
   <script>
-    if (window.history.replaceState) {
-      window.history.replaceState(null, '', window.location.pathname);
-    }
+    // Ocultar el mensaje flash tras unos segundos
+    setTimeout(() => document.getElementById('flash-msg')?.remove(), 6000);
+
+    // Evitar doble envío por clics repetidos
+    const form = document.getElementById('ticket-form');
+    form?.addEventListener('submit', (e) => {
+      const btn = form.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      btn.classList.add('opacity-70', 'cursor-not-allowed');
+      setTimeout(() => { btn.disabled = false; btn.classList.remove('opacity-70','cursor-not-allowed'); }, 4000);
+    });
   </script>
 </body>
 </html>
