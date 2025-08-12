@@ -12,6 +12,13 @@ os.makedirs(DATA_DIR, exist_ok=True)  # << crea la carpeta si no existe
 DATABASE = os.path.join(DATA_DIR, "tickets.db")
 
 
+if __name__ == "__main__":
+    import os
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False, use_reloader=False)
+
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 # Configuración de rutas y base de datos
 # ──────────────────────────────────────────────────────────────────────────────
@@ -152,3 +159,4 @@ def query_tickets(status: str, tech: str):
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
+
